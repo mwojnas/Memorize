@@ -14,6 +14,8 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     
     var score = 0
     
+    let startTime = Date()
+    
     init(numberOfPairsOfCards: Int, cardContentFactory: (Int) -> CardContent) {
         cards = []
         // add numberOfPairsOfCards x 2 cards
@@ -32,15 +34,19 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     
     mutating func choose(_ card: Card) {
         if let chosenIndex = cards.firstIndex(where: { $0.id == card.id }) {
+            if cards[chosenIndex].firstView {
+                cards[chosenIndex].timeSeen = Date()
+                cards[chosenIndex].firstView = false
+            }
             if !cards[chosenIndex].isFaceUp && !cards[chosenIndex].isMatched {
                 if let potentialMatchIndex = indexOfTheOneAndOnlyFaceUpCard {
                     if cards[chosenIndex].content == cards[potentialMatchIndex].content {
                         cards[chosenIndex].isMatched = true
                         cards[potentialMatchIndex].isMatched = true
-                        score += 2
+                        score += max(0, 200 - 20 *  abs(Int(cards[chosenIndex].timeSeen.timeIntervalSince(cards[potentialMatchIndex].timeSeen))))
                     } else {
-                        if cards[chosenIndex].prevSeen { score -= 1 }
-                        if cards[potentialMatchIndex].prevSeen { score -= 1 }
+                        if cards[chosenIndex].prevSeen { score -= 100 }
+                        if cards[potentialMatchIndex].prevSeen { score -= 100 }
                         cards[chosenIndex].prevSeen = true
                         cards[potentialMatchIndex].prevSeen = true
                     }
@@ -61,7 +67,10 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     struct Card: Equatable, Identifiable, CustomDebugStringConvertible {
         var isFaceUp = false
         var isMatched = false
+        var firstView = true
         var prevSeen = false
+        var timeSeen = Date()
+        var pointsEarned = 0
         let content: CardContent
         
         var id: String
@@ -74,8 +83,34 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
 struct Theme<CardContent> {
     var name: String
     var tileSet: [CardContent]
-    var numPairs: Int
+    private var _numPairs: Int
+    var numPairs: Int {
+        get { randNumPairs ? Int.random(in: 2...tileSet.count) : _numPairs }
+        set { _numPairs = newValue }
+    }
     var color: String
+    var colorGrad: Bool
+    var randNumPairs: Bool
+    
+    // Need to cleanup logic for numPairs and ranNumPairs (i.e. when to "default" to randNumPairs)
+    // numPairs shoud probably take precedence over randNumPairs if provided
+    // maybe numPairs should default to tileSet.count
+    init(name: String, tileSet: [CardContent], color: String, colorGrad: Bool = false, numPairs: Int = 0, randNumPairs: Bool = false) {
+        self.name = name
+        self.tileSet = tileSet
+        self.color = color
+        self.colorGrad = colorGrad
+        self._numPairs = if randNumPairs || numPairs <= 1 {
+            Int.random(in: 2...tileSet.count)
+        } else {
+            min(numPairs, tileSet.count)
+        }
+        self.randNumPairs = if numPairs <= 1 {
+            true
+        } else {
+            randNumPairs
+        }
+    }
 }
 
 extension Array {

@@ -8,57 +8,19 @@
 import SwiftUI
 
 class EmojiMemoryGame: ObservableObject {
-    
-    private static var theme = randomTheme()
-                
+                    
     @Published private var model = createMemoryGame()
             
     private static func createMemoryGame() -> MemoryGame<String> {
-        return MemoryGame(numberOfPairsOfCards: min(theme.numPairs, theme.tileSet.count)) { pairIndex in
-            if theme.tileSet.indices.contains(pairIndex) {
-                return theme.tileSet[pairIndex]
+        return MemoryGame(numberOfPairsOfCards: EmojiGameTheme.theme.numPairs) { pairIndex in
+            if EmojiGameTheme.theme.tileSet.indices.contains(pairIndex) {
+                return EmojiGameTheme.theme.tileSet[pairIndex]
             } else {
                 return "⁉️"
             }
         }
     }
-    
-    private static func randomTheme() -> Theme<String> {
-        if var randomTheme = EmojiMemoryGame.themes.randomElement() {
-            randomTheme.tileSet = randomTheme.tileSet.shuffled()
-            return randomTheme
-        } else {
-            return Theme(name: "Default", tileSet: [String](repeating: "⁉️", count: 16), numPairs: 10, color: "red")
-        }
-    }
-    
-    static var themes = [
-        Theme(name: "Halloween", tileSet: ["👻","🎃","🕷️","😈","💀","🕸️","🧙‍♀️","🙀","👹","😱","☠️","🍭"], numPairs: 10, color: "orange"),
-        Theme(name: "Animals", tileSet: ["🦉","🐒","🦆","🦅","🐦‍⬛","🦖","🐡","🦐","🦧","🐖","🦃","🦩"], numPairs: 10, color: "purple"),
-        Theme(name: "Vehicles", tileSet: ["🚙","🚑","✈️","🚢","🚀","🛵","🚲","🛸","🏎️","🚜","🚁","🚂"], numPairs: 10, color: "gray"),
-        Theme(name: "Sports", tileSet: ["⛷️","🤺","🏄‍♂️","🧗‍♂️","🏋️‍♂️","⛹️‍♂️","🏌️‍♂️","🏊‍♀️","🤼‍♂️","🤸‍♂️","🚣‍♂️","🚴‍♂️"], numPairs: 10, color: "green"),
-        Theme(name: "Food", tileSet: ["🥥","🍓","🌶️","🍆","🍋","🍗","🍔","🍕","🍣","🍦","🥞","🧀"], numPairs: 10, color: "brown"),
-        Theme(name: "Flags", tileSet: ["🏴‍☠️","🇨🇦","🇺🇸","🇵🇱","🇸🇰","🇩🇪","🇬🇧","🇹🇹","🇬🇷","🇧🇪","🇸🇪","🇫🇷"], numPairs: 10, color: "black")
-    ]
-    
-    private func decodeThemeColor(color: String) -> Color {
-        if let themeColor = EmojiMemoryGame.colorDict[color] {
-            return themeColor
-        } else {
-            return Color.red
-        }
-    }
-    
-    static let colorDict = ["orange": Color.orange, "purple": Color.purple, "gray": Color.gray, "green": Color.green, "brown": Color.brown, "black": Color.mint]
-    
-    var themeColor: Color {
-        return decodeThemeColor(color: EmojiMemoryGame.theme.color)
-    }
-    
-    var themeName: String {
-        return EmojiMemoryGame.theme.name
-    }
-        
+            
     var cards: Array<MemoryGame<String>.Card> {
         return model.cards
     }
@@ -67,10 +29,14 @@ class EmojiMemoryGame: ObservableObject {
         return model.score
     }
     
+    var startTime: Date {
+        return model.startTime
+    }
+    
     // MARK: - Intents
     
     func newGame() {
-        EmojiMemoryGame.theme = EmojiMemoryGame.randomTheme()
+        EmojiGameTheme.theme = EmojiGameTheme.randomTheme()
         model = EmojiMemoryGame.createMemoryGame()
     }
     
@@ -81,4 +47,46 @@ class EmojiMemoryGame: ObservableObject {
     func choose(_ card: MemoryGame<String>.Card) {
         model.choose(card)
     }
+}
+
+struct EmojiGameTheme {
+    
+    static var theme = randomTheme()
+    
+    static func randomTheme() -> Theme<String> {
+        if var randomTheme = themes.randomElement() {
+            randomTheme.tileSet = randomTheme.tileSet.shuffled()
+            return randomTheme
+        } else {
+            return Theme(name: "Default", tileSet: [String](repeating: "⁉️", count: 16), color: "red", numPairs: 10)
+        }
+    }
+    
+    static func decodeThemeColor(color: String) -> Color {
+        if let themeColor = colorDict[color] {
+            return themeColor
+        } else {
+            return Color.red
+        }
+    }
+    
+    static var themes = [
+        Theme(name: "Halloween", tileSet: ["👻","🎃","🕷️","😈","💀","🕸️","🧙‍♀️","🙀","👹","😱","☠️","🍭"], color: "orange", numPairs: 50),
+        Theme(name: "Animals", tileSet: ["🦉","🐒","🦆","🦅","🐦‍⬛","🦖","🐡","🦐","🦧","🐖","🦃","🦩"], color: "purple", colorGrad: true, numPairs: 2),
+        Theme(name: "Vehicles", tileSet: ["🚙","🚑","✈️","🚢","🚀","🛵","🚲","🛸","🏎️","🚜","🚁","🚂"], color: "gray"),
+        Theme(name: "Sports", tileSet: ["⛷️","🤺","🏄‍♂️","🧗‍♂️","🏋️‍♂️","⛹️‍♂️","🏌️‍♂️","🏊‍♀️","🤼‍♂️","🤸‍♂️","🚣‍♂️","🚴‍♂️"], color: "green", numPairs: 10, randNumPairs: true),
+        Theme(name: "Food", tileSet: ["🥥","🍓","🌶️","🍆","🍋","🍗","🍔","🍕","🍣","🍦","🥞","🧀"], color: "brown", colorGrad: true, numPairs: 10),
+        Theme(name: "Flags", tileSet: ["🏴‍☠️","🇨🇦","🇺🇸","🇵🇱","🇸🇰","🇩🇪","🇬🇧","🇹🇹","🇬🇷","🇧🇪","🇸🇪","🇫🇷"], color: "black", randNumPairs: true)
+    ]
+        
+    static let colorDict = ["orange": Color.orange, "purple": Color.purple, "gray": Color.gray, "green": Color.green, "brown": Color.brown, "black": Color.mint]
+    
+    static var themeColor: Color {
+        return EmojiGameTheme.decodeThemeColor(color: EmojiGameTheme.theme.color)
+    }
+    
+    static var themeName: String {
+        return EmojiGameTheme.theme.name
+    }
+
 }

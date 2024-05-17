@@ -10,7 +10,7 @@ import SwiftUI
 struct EmojiMemoryGameView: View {
 
     @ObservedObject var viewModel: EmojiMemoryGame
-                
+    
     var body: some View {
         VStack {
             ScrollView {
@@ -19,16 +19,19 @@ struct EmojiMemoryGameView: View {
             }
             VStack {
                 HStack {
-                    Text(viewModel.themeName)
+                    Text(EmojiGameTheme.themeName)
                         .font(.largeTitle)
                     Spacer()
                     Text("Score: \(viewModel.score)")
                         .font(.largeTitle)
                 }
-                Button("New Game") {
-                    viewModel.newGame()
+                VStack {
+                    Button("New Game") {
+                        viewModel.newGame()
+                    }
+                    .fontWeight(.bold)
+                    Text(viewModel.startTime, style: .timer)
                 }
-                .fontWeight(.bold)
 
             }
         }
@@ -47,13 +50,16 @@ struct EmojiMemoryGameView: View {
                         }
             }
         }
-        .foregroundColor(viewModel.themeColor)
     }
 }
 
 struct CardView: View {
 
     let card: MemoryGame<String>.Card
+    
+    let themeColor = EmojiGameTheme.themeColor
+    
+    let themeColorGrad = EmojiGameTheme.theme.colorGrad
     
     init(_ card: MemoryGame<String>.Card) {
         self.card = card
@@ -64,15 +70,23 @@ struct CardView: View {
             let base = RoundedRectangle(cornerRadius: 12)
             Group {
                 base.foregroundColor(.white)
-                base.strokeBorder(lineWidth: 2)
+                if themeColorGrad {
+                    base.strokeBorder(themeColor.gradient, lineWidth: 2)
+                } else {
+                    base.strokeBorder(themeColor, lineWidth: 2)
+                }
                 Text(card.content)
                     .font(.system(size: 200))
                     .minimumScaleFactor(0.01)
                     .aspectRatio(1, contentMode: .fit)
             }
                 .opacity(card.isFaceUp ? 1 : 0)
-            base.fill()
-                .opacity(card.isFaceUp ? 0 : 1)
+            if themeColorGrad {
+                base.fill(themeColor.gradient).opacity(card.isFaceUp ? 0 : 1)
+            } else {
+                base.fill(themeColor).opacity(card.isFaceUp ? 0 : 1)
+
+            }
         }
         .opacity(card.isFaceUp || !card.isMatched ? 1 : 0)
     }
