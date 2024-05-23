@@ -43,7 +43,8 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
                     if cards[chosenIndex].content == cards[potentialMatchIndex].content {
                         cards[chosenIndex].isMatched = true
                         cards[potentialMatchIndex].isMatched = true
-                        score += max(0, 200 - 20 *  abs(Int(cards[chosenIndex].timeSeen.timeIntervalSince(cards[potentialMatchIndex].timeSeen))))
+                        score += max(0, 200 - 20 * (Int(min(abs(cards[chosenIndex].timeSeen.timeIntervalSinceNow), abs(cards[potentialMatchIndex].timeSeen.timeIntervalSinceNow)))/10))
+                        print(Int(min(abs(cards[chosenIndex].timeSeen.timeIntervalSinceNow), abs(cards[potentialMatchIndex].timeSeen.timeIntervalSinceNow))))
                     } else {
                         if cards[chosenIndex].prevSeen { score -= 100 }
                         if cards[potentialMatchIndex].prevSeen { score -= 100 }
